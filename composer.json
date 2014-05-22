@@ -1,0 +1,34 @@
+{
+    "name": "infotech/yii-excel2007-document-generator",
+    "description": "Excel2007 renderer for infotech/yii-document-generator.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anton Tyutin",
+            "email": "anton@tyutin.ru"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "infotech/yii-document-generator": "dev-master"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "2.0.*@dev",
+        "yiisoft/yii": "dev-master",
+        "phpoffice/phpexcel": "1.8.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Infotech\\Excel2007DocumentGenerator\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "vendor/yiisoft/yii/framework/base/",
+            "vendor/yiisoft/yii/framework/db/"
+        ]
+    },
+    "config": {
+        "bin-dir": "bin"
+    }
+}
