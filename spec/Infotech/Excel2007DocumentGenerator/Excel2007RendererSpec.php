@@ -13,6 +13,7 @@ class Excel2007RendererSpec extends ObjectBehavior
         $createTmpFile = function ($contents) {
             $tmpfile = tempnam(sys_get_temp_dir(), 'spec_fixture_');
             file_put_contents($tmpfile, $contents);
+
             return $tmpfile;
         };
         $extractDocument = function ($contents) use ($createTmpFile) {

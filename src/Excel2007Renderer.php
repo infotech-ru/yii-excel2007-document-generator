@@ -33,7 +33,7 @@ class Excel2007Renderer implements RendererInterface
         }
 
         $zip = new ZipArchive();
-        if (!$zip->open($templatePath) || !$sharedStrings = $zip->getFromName('xl/sharedStrings.xml')) {
+        if (!$zip->open($tmpPath) || !$sharedStrings = $zip->getFromName('xl/sharedStrings.xml')) {
             throw new CException('Unsupported template file format. Required xlsx (Excel2007) file');
         }
 
