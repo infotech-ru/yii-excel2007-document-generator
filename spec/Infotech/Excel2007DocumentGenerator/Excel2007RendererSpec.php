@@ -75,6 +75,20 @@ class Excel2007RendererSpec extends ObjectBehavior
         $result->shouldContains($data);
     }
 
+    function it_should_fillup_template_with_values_containing_xml_symbols()
+    {
+        $fixtureTemplate = __DIR__ . '/../../fixtures/simple_template.xlsx';
+        $data = [
+            'PLACEHOLDER_1' => '20 < 5',
+            'PLACEHOLDER_2' => '&mdash;',
+            'PLACEHOLDER_3' => '<!-- dsfsdgsdh',
+        ];
+
+        $result = $this->render($fixtureTemplate, $data);
+        $result->shouldBeXlsXDocument();
+        $result->shouldContains($data);
+    }
+
     function it_should_throw_an_exception_when_template_not_found()
     {
         $fixtureTemplate = __DIR__ . '/../../fixtures/unexistent_template.xlsx';

@@ -38,7 +38,7 @@ class Excel2007Renderer implements RendererInterface
         }
 
         $replaceFn = function ($matches) use ($data) {
-            return isset($data[$matches[1]]) ? $data[$matches[1]] : $matches[0];
+            return htmlspecialchars(isset($data[$matches[1]]) ? $data[$matches[1]] : $matches[0]);
         };
 
         $zip->addFromString('xl/sharedStrings.xml', preg_replace_callback('/\$\{(\w+)\}/', $replaceFn, $sharedStrings));
