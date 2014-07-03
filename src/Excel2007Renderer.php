@@ -38,10 +38,12 @@ class Excel2007Renderer implements RendererInterface
         }
 
         $replaceFn = function ($matches) use ($data) {
-            return htmlspecialchars(isset($data[$matches[1]]) ? $data[$matches[1]] : $matches[0]);
+            $placeholderName = strip_tags($matches[1]);
+
+            return isset($data[$placeholderName]) ? htmlspecialchars($data[$placeholderName]) : $matches[0];
         };
 
-        $zip->addFromString('xl/sharedStrings.xml', preg_replace_callback('/\$\{(\w+)\}/', $replaceFn, $sharedStrings));
+        $zip->addFromString('xl/sharedStrings.xml', preg_replace_callback('/\$\{([^}]+)\}/', $replaceFn, $sharedStrings));
 
         if (!$zip->close() ) {
             throw new CException('Error while writing temporary rendered file');
