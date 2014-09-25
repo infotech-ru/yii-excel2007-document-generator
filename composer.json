@@ -10,7 +10,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "infotech/yii-document-generator": "dev-master"
+        "infotech/yii-document-generator": "0.1.*"
     },
     "require-dev": {
         "phpspec/phpspec": "2.0.*@dev",
