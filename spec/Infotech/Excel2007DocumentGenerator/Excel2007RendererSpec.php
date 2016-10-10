@@ -4,7 +4,6 @@ namespace spec\Infotech\Excel2007DocumentGenerator;
 
 use PHPExcel_IOFactory;
 use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
 
 class Excel2007RendererSpec extends ObjectBehavior
 {
@@ -52,6 +51,48 @@ class Excel2007RendererSpec extends ObjectBehavior
                 );
 
                 return !array_diff((array)$strings, $matches[0]);
+            },
+            'notContains' => function($subject, $strings) use ($createTmpFile) {
+                $tmpfile = $createTmpFile($subject);
+
+                $book = PHPExcel_IOFactory::load($tmpfile);
+                unlink($tmpfile);
+
+                $cellValues = array();
+
+                foreach ($book->getAllSheets() as $sheet) {
+                    foreach ($sheet->getRowIterator() as $row) {
+                        foreach ($row->getCellIterator() as $cell) {
+                            $cellValues[] = $cell->getValue();
+                        }
+                    }
+                }
+
+                preg_match_all(
+                    '/' . implode('|', array_map('preg_quote', (array)$strings)) . '/',
+                    implode("\n", $cellValues),
+                    $matches
+                );
+
+                return !array_diff((array)$strings, array_intersect((array)$strings, $matches[0]));
+            },
+            'zippedFilesExists' => function($subject, $filePaths) use ($createTmpFile) {
+                $zip = new \ZipArchive();
+                $zip->open($createTmpFile($subject));
+
+
+                $filePatterns = array_map(function ($pattern) {
+                    return '/^' . str_replace(array('*', '?'), array('.*', '.'), preg_quote($pattern, '/')) . '$/';
+                }, (array)$filePaths);
+                for ($i = 0; $file = $zip->statIndex($i); $i++) {
+                    foreach ($filePatterns as $filePatternIdx => $filePattern) {
+                        if (preg_match($filePattern, $file['name'])) {
+                            unset($filePatterns[$filePatternIdx]);
+                        }
+                    }
+                }
+
+                return count($filePatterns) !== 0;
             }
         ];
     }
@@ -97,5 +138,19 @@ class Excel2007RendererSpec extends ObjectBehavior
         ];
 
         $this->shouldThrow('CException')->during('render', array($fixtureTemplate, $data));
+    }
+
+    function it_should_insert_image_file()
+    {
+        $fixtureTemplate = __DIR__ . '/../../fixtures/simple_template.xlsx';
+        $fixtureImage = __DIR__ . '/../../fixtures/picture.jpg';
+        $data = [
+            'IMAGE' => file_get_contents($fixtureImage),
+        ];
+
+        $result = $this->render($fixtureTemplate, $data);
+        $result->shouldBeXlsXDocument();
+        $result->shouldNotContains(['${IMAGE:300x700}']);
+        $result->shouldZippedFilesExists(['xl/images/*']);
     }
 }
