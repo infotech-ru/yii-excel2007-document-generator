@@ -82,7 +82,7 @@ class Excel2007RendererSpec extends ObjectBehavior
 
 
                 $filePatterns = array_map(function ($pattern) {
-                    return '/^' . str_replace(array('*', '?'), array('.*', '.'), preg_quote($pattern, '/')) . '$/';
+                    return '/^' . str_replace(array('\*', '\?'), array('.*', '.'), preg_quote($pattern, '/')) . '$/';
                 }, (array)$filePaths);
                 for ($i = 0; $file = $zip->statIndex($i); $i++) {
                     foreach ($filePatterns as $filePatternIdx => $filePattern) {
@@ -93,7 +93,27 @@ class Excel2007RendererSpec extends ObjectBehavior
                 }
                 unlink($zip->filename);
 
-                return count($filePatterns) !== 0;
+                return count($filePatterns) === 0;
+            },
+            'zippedFilesCountEquals' => function($subject, $filePaths, $count) use ($createTmpFile) {
+                $zip = new \ZipArchive();
+                $zip->open($createTmpFile($subject));
+
+                $actuallyCount = 0;
+                $filePatterns = array_map(function ($pattern) {
+                    return '/^' . str_replace(array('\*', '\?'), array('.*', '.'), preg_quote($pattern, '/')) . '$/';
+                }, (array)$filePaths);
+                for ($i = 0; $file = $zip->statIndex($i); $i++) {
+                    foreach ($filePatterns as $filePatternIdx => $filePattern) {
+                        if (preg_match($filePattern, $file['name'])) {
+                            $actuallyCount++;
+                            break;
+                        }
+                    }
+                }
+                unlink($zip->filename);
+
+                return $actuallyCount == $count;
             }
         ];
     }
@@ -144,14 +164,17 @@ class Excel2007RendererSpec extends ObjectBehavior
     function it_should_insert_image_file()
     {
         $fixtureTemplate = __DIR__ . '/../../fixtures/simple_template.xlsx';
-        $fixtureImage = __DIR__ . '/../../fixtures/picture.jpg';
         $data = [
-            'IMAGE' => file_get_contents($fixtureImage),
+            'IMAGE' => file_get_contents(__DIR__ . '/../../fixtures/picture1.jpg'),
+            'IMAGE2' => file_get_contents(__DIR__ . '/../../fixtures/picture2.jpeg'),
         ];
 
         $result = $this->render($fixtureTemplate, $data);
         $result->shouldBeXlsXDocument();
         $result->shouldNotContains(['${IMAGE:200x300}']);
-        $result->shouldZippedFilesExists(['xl/images/*']);
+        $result->shouldNotContains(['${IMAGE2:200x300}']);
+        $result->shouldNotContains(['${IMAGE:100x200}']);
+        $result->shouldZippedFilesExists(['xl/media/*']);
+        $result->shouldZippedFilesCountEquals(['xl/media/*'], 2);
     }
 }

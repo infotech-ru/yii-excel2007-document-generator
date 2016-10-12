@@ -41,6 +41,7 @@ class Excel2007Renderer implements RendererInterface
         $xlsx = new Excel2007File($tmpPath);
 
         $imageSubstitutions = array();
+        $knownImages = array();
         $doc = $xlsx->fetchXml('xl/sharedStrings.xml');
         $stringNodes = self::xpath($doc, array('ws' => 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'))
             ->query('/ws:sst/ws:si');
@@ -49,14 +50,18 @@ class Excel2007Renderer implements RendererInterface
             if ($placeholderParams = self::fetchImagePlaceholderParams($stringNode->textContent)) {
                 $dataIdx = array_shift($placeholderParams);
                 if (isset($data[$dataIdx])) {
-                    $imageFile = 'xl/media/' . md5($dataIdx) . '.jpeg';
-                    $imageSubstitutions[$stringIdx] = array(
-                        'dataIdx' => $dataIdx,
-                        'params' => $placeholderParams,
-                        'filename' => $imageFile,
-                    );
-                    $xlsx->putEntry($imageFile, $data[$dataIdx], 'image/jpeg');
-                    unset($data[$dataIdx]);
+                    if ($data[$dataIdx]) {
+                        $imageFile = 'xl/media/' . md5($dataIdx) . '.jpeg';
+                        $imageSubstitutions[$stringIdx] = array(
+                            'dataIdx' => $dataIdx,
+                            'params' => $placeholderParams,
+                            'filename' => $imageFile,
+                        );
+                        if (!isset($knownImages[$imageFile])) {
+                            $xlsx->putEntry($imageFile, $data[$dataIdx], 'image/jpeg');
+                            $knownImages[$imageFile] = true;
+                        }
+                    }
                     $stringNode->parentNode->replaceChild(self::createDomFragment($doc, '<si><t> </t></si>'), $stringNode);
                 }
             } else {
