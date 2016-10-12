@@ -48,17 +48,17 @@ class Excel2007Renderer implements RendererInterface
             /** @var DOMNode $stringNode */
             if ($placeholderParams = self::fetchImagePlaceholderParams($stringNode->textContent)) {
                 $dataIdx = array_shift($placeholderParams);
-                $imageFile = 'xl/media/' . md5($dataIdx) . '.jpeg';
-                $imageSubstitutions[$stringIdx] = array(
-                    'dataIdx' => $dataIdx,
-                    'params' => $placeholderParams,
-                    'filename' => $imageFile,
-                );
                 if (isset($data[$dataIdx])) {
+                    $imageFile = 'xl/media/' . md5($dataIdx) . '.jpeg';
+                    $imageSubstitutions[$stringIdx] = array(
+                        'dataIdx' => $dataIdx,
+                        'params' => $placeholderParams,
+                        'filename' => $imageFile,
+                    );
                     $xlsx->putEntry($imageFile, $data[$dataIdx], 'image/jpeg');
                     unset($data[$dataIdx]);
+                    $stringNode->parentNode->replaceChild(self::createDomFragment($doc, '<si><t> </t></si>'), $stringNode);
                 }
-                $stringNode->parentNode->replaceChild(self::createDomFragment($doc, '<si><t> </t></si>'), $stringNode);
             } else {
                 $modifiedXml = preg_replace_callback('/\$\{([^}]+)\}/', function ($matches) use ($data) {
                     return !isset($data[$dataIdx = strip_tags($matches[1])])
@@ -91,7 +91,7 @@ class Excel2007Renderer implements RendererInterface
 
                     $imageSubstitution = $imageSubstitutions[(int)$xpath->evaluate('string(ws:v)', $imageNode)];
                     $cellAddress = preg_split('/(?<=[A-Z])(?=[0-9])/', $imageNode->getAttribute('r'));
-                    $rowFrom = $cellAddress[1];
+                    $rowFrom = -1 + (int)$cellAddress[1];
                     $colFrom = -1 + array_reduce(
                         preg_split('//', $cellAddress[0], -1, PREG_SPLIT_NO_EMPTY),
                         function ($acc, $digit) { return $acc * 26 + ord($digit) - ord('A') + 1; },
@@ -175,7 +175,7 @@ class Excel2007Renderer implements RendererInterface
         $drawingsNode->appendChild($drawingNode = $doc->createElement('xdr:oneCellAnchor'));
         $drawingNode->appendChild($drawingFromNode = $doc->createElement('xdr:from'));
         $drawingFromNode->appendChild($doc->createElement('xdr:col', $image['column']));
-        $drawingFromNode->appendChild($doc->createElement('xdr:colOff', self::pixelsToEMUs(30)));
+        $drawingFromNode->appendChild($doc->createElement('xdr:colOff', self::pixelsToEMUs(0)));
         $drawingFromNode->appendChild($doc->createElement('xdr:row', $image['row']));
         $drawingFromNode->appendChild($doc->createElement('xdr:rowOff', self::pixelsToEMUs(0)));
         $drawingNode->appendChild($pictureExtNode = $doc->createElement('xdr:ext'));

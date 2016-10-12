@@ -91,6 +91,7 @@ class Excel2007RendererSpec extends ObjectBehavior
                         }
                     }
                 }
+                unlink($zip->filename);
 
                 return count($filePatterns) !== 0;
             }
@@ -150,7 +151,7 @@ class Excel2007RendererSpec extends ObjectBehavior
 
         $result = $this->render($fixtureTemplate, $data);
         $result->shouldBeXlsXDocument();
-        $result->shouldNotContains(['${IMAGE:300x700}']);
+        $result->shouldNotContains(['${IMAGE:200x300}']);
         $result->shouldZippedFilesExists(['xl/images/*']);
     }
 }
