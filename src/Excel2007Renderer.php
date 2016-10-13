@@ -194,6 +194,7 @@ class Excel2007Renderer implements RendererInterface
         $pictureNvPropsNode->appendChild($pictureCNvPropNode = $doc->createElement('xdr:cNvPicPr'));
         $pictureNode->appendChild($imageContainerNode = $doc->createElement('xdr:blipFill'));
         $imageContainerNode->appendChild($imageNode = $doc->createElement('a:blip'));
+        $imageNode->setAttribute('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
         $imageNode->setAttribute('r:embed', $image['relId']);
         $imageNode->setAttribute('cstate', 'print');
         $imageContainerNode->appendChild($imageStretchNode = $doc->createElement('a:stretch'));
@@ -291,8 +292,7 @@ XML
             $xlsx->putEntry($drawingFile, <<<'XML'
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-    xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+    xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
 XML
             , 'application/vnd.openxmlformats-officedocument.drawing+xml');
             $this->addRelationToRelsXml($sheetRelsDoc, self::RELTYPE_DRAWING, $drawingFile, $drawingRelationId);
