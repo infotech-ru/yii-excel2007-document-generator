@@ -301,7 +301,20 @@ XML
             $sheetDoc->firstChild->appendChild($drawingNode = $sheetDoc->createElement('drawing'));
             $drawingNode->setAttribute('r:id', $drawingRelationId);
         } else {
-            $drawingFile = dirname($sheetFile) . '/' . $drawingFiles[0];
+            $drawingFileParts = array();
+            foreach (explode('/', dirname($sheetFile) . '/' . $drawingFiles[0]) as $part) {
+                if ($part == '.') {
+                    continue;
+                } elseif ($part == '..') {
+                    if (null === array_pop($drawingFileParts)) {
+                        throw new CException('Invalid file path "' . $drawingFiles[0] . '"');
+                    }
+                } else {
+                    $drawingFileParts[] = $part;
+                }
+            }
+
+            $drawingFile = implode('/', $drawingFileParts);
         }
 
         return $drawingFile;
