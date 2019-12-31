@@ -329,12 +329,12 @@ XML
     {
         $cellText = strip_tags($cellText);
 
-        if (substr($cellText, 0, 2) == '${' && substr($cellText, -1) == '}') {
-            $params = explode(':', strip_tags(substr($cellText, 2, -1)));
+        if (preg_match('/^\$\{([^\}]+)\}$/', $cellText, $matches)) {
+            $params = explode(':', strip_tags($matches[1]));
             if (count($params) > 1) {
                 return $params;
             }
-        }
+        };
 
         return false;
     }
