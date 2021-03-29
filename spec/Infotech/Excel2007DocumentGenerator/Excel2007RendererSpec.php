@@ -2,8 +2,9 @@
 
 namespace spec\Infotech\Excel2007DocumentGenerator;
 
-use PHPExcel_IOFactory;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpSpec\ObjectBehavior;
+use ZipArchive;
 
 class Excel2007RendererSpec extends ObjectBehavior
 {
@@ -31,7 +32,7 @@ class Excel2007RendererSpec extends ObjectBehavior
             'contains' => function($subject, $strings) use ($createTmpFile) {
                 $tmpfile = $createTmpFile($subject);
 
-                $book = PHPExcel_IOFactory::load($tmpfile);
+                $book = IOFactory::load($tmpfile);
                 unlink($tmpfile);
 
                 $cellValues = array();
@@ -55,7 +56,7 @@ class Excel2007RendererSpec extends ObjectBehavior
             'notContains' => function($subject, $strings) use ($createTmpFile) {
                 $tmpfile = $createTmpFile($subject);
 
-                $book = PHPExcel_IOFactory::load($tmpfile);
+                $book = IOFactory::load($tmpfile);
                 unlink($tmpfile);
 
                 $cellValues = array();
@@ -77,7 +78,7 @@ class Excel2007RendererSpec extends ObjectBehavior
                 return !array_diff((array)$strings, array_intersect((array)$strings, $matches[0]));
             },
             'zippedFilesExists' => function($subject, $filePaths) use ($createTmpFile) {
-                $zip = new \ZipArchive();
+                $zip = new ZipArchive();
                 $zip->open($createTmpFile($subject));
 
 
@@ -96,7 +97,7 @@ class Excel2007RendererSpec extends ObjectBehavior
                 return count($filePatterns) === 0;
             },
             'zippedFilesCountEquals' => function($subject, $filePaths, $count) use ($createTmpFile) {
-                $zip = new \ZipArchive();
+                $zip = new ZipArchive();
                 $zip->open($createTmpFile($subject));
 
                 $actuallyCount = 0;
