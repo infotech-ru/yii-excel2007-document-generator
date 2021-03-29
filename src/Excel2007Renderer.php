@@ -10,11 +10,13 @@
 
 namespace Infotech\Excel2007DocumentGenerator;
 
+use CException;
 use DOMDocument;
+use DOMDocumentFragment;
 use DOMElement;
 use DOMNode;
+use DOMXPath;
 use Infotech\DocumentGenerator\Renderer\RendererInterface;
-use CException;
 
 class Excel2007Renderer implements RendererInterface
 {
@@ -27,12 +29,12 @@ class Excel2007Renderer implements RendererInterface
      *
      * @param string $templatePath
      * @param array $data
-     * @throws \CException While template read error or temporary document write error
      * @return string Rendered document as binary string
+     * @throws CException While template read error or temporary document write error
      */
     public function render($templatePath, array $data)
     {
-        $tmpPath = sys_get_temp_dir() . '/' . uniqid('excel_render_');
+        $tmpPath = sys_get_temp_dir() . '/' . uniqid('excel_render_', false);
 
         if (!@copy($templatePath, $tmpPath)) {
             throw new CException('Error while reading a template file');
@@ -92,16 +94,18 @@ class Excel2007Renderer implements RendererInterface
                 $xpath = self::xpath($doc, array('ws' => 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'));
                 $imageNodes = $xpath->query($imageNodesXPath);
                 foreach ($imageNodes as $imageNode) {
-                    /** @var \DOMElement $imageNode */
+                    /** @var DOMElement $imageNode */
 
                     $imageSubstitution = $imageSubstitutions[(int)$xpath->evaluate('string(ws:v)', $imageNode)];
                     $cellAddress = preg_split('/(?<=[A-Z])(?=[0-9])/', $imageNode->getAttribute('r'));
                     $rowFrom = -1 + (int)$cellAddress[1];
                     $colFrom = -1 + array_reduce(
-                        preg_split('//', $cellAddress[0], -1, PREG_SPLIT_NO_EMPTY),
-                        function ($acc, $digit) { return $acc * 26 + ord($digit) - ord('A') + 1; },
-                        0
-                    );
+                            preg_split('//', $cellAddress[0], -1, PREG_SPLIT_NO_EMPTY),
+                            function ($acc, $digit) {
+                                return $acc * 26 + ord($digit) - ord('A') + 1;
+                            },
+                            0
+                        );
                     list($width, $height) = explode('x', $imageSubstitution['params'][0]);
                     $this->addRelationToRelsXml(
                         $drawingRelsDoc,
@@ -248,11 +252,15 @@ class Excel2007Renderer implements RendererInterface
     {
         $relsFileName = $this->getRelsFileName($fileName);
         if (!$xlsx->hasEntry($relsFileName)) {
-            $xlsx->putEntry($relsFileName, <<<'XML'
+            $xlsx->putEntry(
+                $relsFileName,
+                <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>
 XML
-            , 'application/vnd.openxmlformats-package.relationships+xml');
+                ,
+                'application/vnd.openxmlformats-package.relationships+xml'
+            );
         }
 
         return $xlsx->fetchXml($relsFileName);
@@ -261,13 +269,13 @@ XML
     /**
      * @param DOMDocument $doc
      *
-     * @param array       $namespaces
+     * @param array $namespaces
      *
-     * @return \DOMXPath
+     * @return DOMXPath
      */
     private static function xpath(DOMDocument $doc, $namespaces = [])
     {
-        $xpath = new \DOMXPath($doc);
+        $xpath = new DOMXPath($doc);
 
         foreach ($namespaces as $prefix => $url) {
             $xpath->registerNamespace($prefix, $url);
@@ -289,12 +297,16 @@ XML
 
         if (!$drawingFiles) {
             $drawingFile = 'xl/drawings/' . str_replace('sheet', 'drawing', basename($sheetFile));
-            $xlsx->putEntry($drawingFile, <<<'XML'
+            $xlsx->putEntry(
+                $drawingFile,
+                <<<'XML'
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
     xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
 XML
-            , 'application/vnd.openxmlformats-officedocument.drawing+xml');
+                ,
+                'application/vnd.openxmlformats-officedocument.drawing+xml'
+            );
             $this->addRelationToRelsXml($sheetRelsDoc, self::RELTYPE_DRAWING, $drawingFile, $drawingRelationId);
 
             $sheetDoc = $xlsx->fetchXml($sheetFile);
@@ -334,7 +346,7 @@ XML
             if (count($params) > 1) {
                 return $params;
             }
-        };
+        }
 
         return false;
     }
@@ -343,7 +355,7 @@ XML
      * @param DOMDocument $doc
      * @param string $xml
      *
-     * @return \DOMDocumentFragment
+     * @return DOMDocumentFragment
      */
     private static function createDomFragment(DOMDocument $doc, $xml)
     {
