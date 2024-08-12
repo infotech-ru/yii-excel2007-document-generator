@@ -90,7 +90,7 @@ class Excel2007File
             }
         }
 
-        return $this->changedFiles[$path] instanceof DOMDocument ? $this->changedFiles[$path] : false;
+        return $this->changedFiles[$path] instanceof DOMDocument ? $this->changedFiles[$path] : new DOMDocument();
     }
 
     /**
